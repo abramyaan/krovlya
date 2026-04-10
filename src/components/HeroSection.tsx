@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Shield, FileText, Calculator, Heart } from "lucide-react";
+import { Shield, FileText, Calculator, Heart, Star } from "lucide-react";
 import heroImg from "@/assets/hero-roofing.jpg";
 
 const usps = [
@@ -13,7 +13,13 @@ const HeroSection = () => {
   return (
     <section id="hero" className="relative min-h-screen flex items-center pt-32">
       <div className="absolute inset-0">
-        <img src={heroImg} alt="Кровельные работы" className="w-full h-full object-cover" width={1920} height={1080} />
+        <img 
+          src={heroImg} 
+          alt="Кровельные работы" 
+          className="w-full h-full object-cover" 
+          width={1920} 
+          height={1080} 
+        />
         <div className="absolute inset-0" style={{ background: "var(--hero-overlay)" }} />
       </div>
 
@@ -41,7 +47,10 @@ const HeroSection = () => {
                 transition={{ delay: 0.3 + i * 0.15 }}
                 className="flex items-center gap-3"
               >
-                <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--gradient-primary)" }}>
+                <div 
+                  className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" 
+                  style={{ background: "var(--gradient-primary)" }}
+                >
                   <usp.icon className="w-4 h-4 text-primary-foreground" />
                 </div>
                 <span className="text-primary-foreground/90 text-sm md:text-base">{usp.text}</span>
@@ -49,7 +58,7 @@ const HeroSection = () => {
             ))}
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row gap-4 mb-10">
             <motion.a
               href="#quiz"
               initial={{ opacity: 0, y: 20 }}
@@ -69,6 +78,43 @@ const HeroSection = () => {
               Наши услуги
             </motion.a>
           </div>
+
+          {/* Блок доверия: Яндекс и Авито */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 1.3, duration: 0.5 }}
+            className="flex flex-wrap gap-4"
+          >
+            {/* Яндекс Карты */}
+            <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md border border-white/20 p-2 px-4 rounded-xl">
+              <div className="flex items-center justify-center w-8 h-8 bg-[#f33] rounded-full text-white font-bold text-lg">Я</div>
+              <div>
+                <div className="flex items-center gap-1">
+                  <span className="text-white font-bold text-lg leading-none">4.8</span>
+                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                </div>
+                <p className="text-white/60 text-[10px] uppercase tracking-wider font-semibold">Яндекс Карты</p>
+              </div>
+            </div>
+
+            {/* Авито */}
+            <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md border border-white/20 p-2 px-4 rounded-xl">
+              <div className="flex gap-0.5">
+                <div className="w-2 h-2 rounded-full bg-[#96ef00]"></div>
+                <div className="w-2 h-2 rounded-full bg-[#ffbb00]"></div>
+                <div className="w-2 h-2 rounded-full bg-[#00aaee]"></div>
+              </div>
+              <div>
+                <div className="flex items-center gap-1">
+                  <span className="text-white font-bold text-lg leading-none">5.0</span>
+                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                </div>
+                <p className="text-white/60 text-[10px] uppercase tracking-wider font-semibold">Авито отзывы</p>
+              </div>
+            </div>
+          </motion.div>
+
         </motion.div>
       </div>
     </section>
