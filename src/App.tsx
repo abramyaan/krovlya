@@ -13,8 +13,8 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      {/* Добавляем basename, чтобы роутер понимал, что корень сайта — это /krovlya/ */}
-      <BrowserRouter basename="/krovlya">
+      {/* Убрали basename="/krovlya", теперь корень приложения — это главная страница домена */}
+      <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
