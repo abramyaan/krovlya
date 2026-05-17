@@ -1,14 +1,98 @@
+import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { MapPin, Phone, Mail, Send } from "lucide-react";
-import { useState } from "react";
+import { MapPin, Phone, Mail, Send, User, MessageSquare } from "lucide-react";
 
 const MapSection = () => {
-  const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("+7 "); // Изначально задаем жесткий префикс
+  const [comment, setComment] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
+  // 1. Фильтр для Имени: пропускает только буквы и пробелы
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    // Удаляем всё, что НЕ является русской/латинской буквой или пробелом
+    const cleanName = val.replace(/[^a-zA-Zа-яА-ЯёЁ\s]/g, "");
+    setName(cleanName);
+  };
+
+  // 2. Шаблон для Телефона: держит префикс +7 и пускает только цифры
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+
+    // Если пользователь пытается стереть "+7 ", возвращаем префикс на место
+    if (!val.startsWith("+7 ")) {
+      setPhone("+7 ");
+      return;
+    }
+
+    // Извлекаем только ту часть номера, которую вводит пользователь после "+7 "
+    const inputNumbers = val.slice(3);
+    
+    // Удаляем из нее всё, кроме чистых цифр
+    const cleanNumbers = inputNumbers.replace(/[^\d]/g, "");
+
+    // Ограничиваем длину номера (в РФ 10 цифр после +7)
+    if (cleanNumbers.length <= 10) {
+      setPhone("+7 " + cleanNumbers);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Финальная проверка перед отправкой в ТГ
+    if (name.trim().length < 2) {
+      alert("Пожалуйста, введите корректное имя");
+      return;
+    }
+
+    // Убираем пробел из стейта для отправки (+7 9991234567 -> +79991234567)
+    const formattedPhone = phone.replace(/\s/g, "");
+
+    // Проверяем, что в номере ровно 11 цифр (включая семерку)
+    if (formattedPhone.length !== 12) { // +7 и 10 цифр = 12 символов строки
+      alert("Номер телефона должен содержать 11 цифр");
+      return;
+    }
+
+    const BOT_TOKEN = "8620797217:AAEPQof7Tsrps1CgCBWUwT-s11_MR1D3FLE";
+    const CHAT_ID = "-5126230189";
+
+    const message = `
+🔔 *Новая заявка с карты (Контакты)!*
+👤 *Имя:* ${name.trim()}
+📞 *Телефон:* ${formattedPhone}
+💬 *Комментарий:* ${comment.trim() ? comment.trim() : "Не указан"}
+    `.trim();
+
+    try {
+      const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          chat_id: CHAT_ID,
+          text: message,
+          parse_mode: "Markdown",
+        }),
+      });
+
+      if (response.ok) {
+        setSubmitted(true);
+      } else {
+        console.error("Ошибка API Telegram:", response.statusText);
+        setSubmitted(true); 
+      }
+    } catch (error) {
+      console.error("Ошибка сети при отправке в Telegram:", error);
+      setSubmitted(true);
+    }
+  };
+
   return (
-    <section id="map" className="py-20 bg-muted">
+    <section id="map" className="py-20 bg-muted scroll-mt-10" style={{ contentVisibility: "auto" } as React.CSSProperties}>
       <div className="container mx-auto px-4">
         <div className="text-center mb-14">
           <h2 className="section-title text-foreground">
@@ -20,12 +104,11 @@ const MapSection = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Map */}
           <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="rounded-2xl overflow-hidden card-hover h-96 lg:h-auto"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true, margin: "-50px" }}
+            className="rounded-2xl overflow-hidden card-hover h-96 lg:h-auto will-change-transform"
           >
             <iframe
               src="https://yandex.ru/map-widget/v1/?um=constructor%3A44c7e43b6e18e67e7e69e87e0b1f8e2e&amp;source=constructor"
@@ -37,56 +120,81 @@ const MapSection = () => {
             />
           </motion.div>
 
-          {/* Contact form */}
           <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="bg-card rounded-2xl p-8 card-hover"
+            id="lead-form"
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            className="bg-card rounded-2xl p-8 card-hover will-change-transform scroll-mt-32"
           >
-            <h3 className="font-heading font-bold text-2xl text-foreground mb-6">Оставить заявку</h3>
+            <h3 className="font-heading font-bold text-2xl text-foreground mb-2">Оставить заявку</h3>
+            <p className="text-muted-foreground text-sm mb-6">Оставьте ваши контакты, и наш специалист свяжется с вами для консультации</p>
             
             {!submitted ? (
-              <div className="space-y-4">
-                <input
-                  type="text"
-                  placeholder="Ваше имя"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full p-4 rounded-xl border-2 border-border bg-background text-foreground focus:border-primary focus:outline-none transition-colors"
-                />
-                <input
-                  type="tel"
-                  placeholder="+7 (___) ___-__-__"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full p-4 rounded-xl border-2 border-border bg-background text-foreground focus:border-primary focus:outline-none transition-colors"
-                />
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Инпут Имени */}
+                <div className="relative">
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Ваше имя (только буквы)"
+                    required
+                    value={name}
+                    onChange={handleNameChange}
+                    className="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-border bg-background text-foreground focus:border-primary focus:outline-none transition-colors"
+                  />
+                </div>
+
+                {/* Инпут Телефона */}
+                <div className="relative">
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <input
+                    type="text"
+                    required
+                    value={phone}
+                    onChange={handlePhoneChange}
+                    className="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-border bg-background text-foreground focus:border-primary focus:outline-none transition-colors font-mono"
+                  />
+                </div>
+
+                <div className="relative">
+                  <MessageSquare className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Комментарий (необязательно)"
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    className="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-border bg-background text-foreground focus:border-primary focus:outline-none transition-colors"
+                  />
+                </div>
+
                 <button
-                  onClick={() => setSubmitted(true)}
-                  className="btn-primary w-full flex items-center justify-center gap-2 text-lg"
+                  type="submit"
+                  className="btn-primary w-full flex items-center justify-center gap-2 text-lg py-4 shadow-md transition-all active:scale-[0.98]"
                 >
                   <Send className="w-5 h-5" />
                   Отправить заявку
                 </button>
-              </div>
+              </form>
             ) : (
               <div className="text-center py-8">
                 <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ background: "var(--gradient-primary)" }}>
-                  <svg className="w-8 h-8 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  <svg className="w-8 h-8 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
                 </div>
                 <h3 className="font-heading font-bold text-2xl text-foreground mb-2">Заявка отправлена!</h3>
-                <p className="text-muted-foreground">Мы свяжемся с вами в ближайшее время</p>
+                <p className="text-muted-foreground">Мы свяжемся с вами в течение 15 минут</p>
               </div>
             )}
 
-            <div className="mt-8 space-y-4">
+            <div className="mt-8 space-y-4 border-t border-border pt-6">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--gradient-primary)" }}>
                   <Phone className="w-5 h-5 text-primary-foreground" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Телефон</p>
+                  <p className="text-sm text-muted-foreground">Telephone</p>
                   <a href="tel:+79991234567" className="font-bold text-foreground hover:text-primary transition-colors">+7 (999) 123-45-67</a>
                 </div>
               </div>
