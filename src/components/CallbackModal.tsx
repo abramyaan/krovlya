@@ -1,56 +1,79 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom"; // Импортируем хук для навигации
 import { X, Send } from "lucide-react";
 
 const CallbackModal = () => {
-  const [phone, setPhone] = useState("");
+  const navigate = useNavigate(); // Инициализируем навигацию
+  const [phone, setPhone] = useState("+7 "); // Префикс по умолчанию
   const [submitted, setSubmitted] = useState(false);
 
   const close = () => {
     document.getElementById("callback-modal")?.classList.add("hidden");
     // Сбрасываем форму через небольшую задержку после закрытия, чтобы не дергался UI
     setTimeout(() => {
-      setPhone("");
+      setPhone("+7 ");
       setSubmitted(false);
     }, 300);
+  };
+
+  // Шаблон для Телефона: держит префикс +7 и пускает только цифры
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+
+    if (!val.startsWith("+7 ")) {
+      setPhone("+7 ");
+      return;
+    }
+
+    const inputNumbers = val.slice(3);
+    const cleanNumbers = inputNumbers.replace(/[^\d]/g, "");
+
+    if (cleanNumbers.length <= 10) {
+      setPhone("+7 " + cleanNumbers);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!phone.trim()) return;
+    // Проверяем длину номера телефона перед отправкой (+7XXXXXXXXXX = 12 символов с учетом пробела)
+    const formattedPhone = phone.replace(/\s/g, "");
+    if (formattedPhone.length !== 12) {
+      alert("Номер телефона должен содержать 11 цифр");
+      return;
+    }
+
+    // ⚡ МОМЕНТАЛЬНЫЙ ПЕРЕХОД: мгновенно закрываем модалку и уводим на страницу спасибо
+    close();
+    navigate("/thank-you");
 
     const BOT_TOKEN = "8620797217:AAEPQof7Tsrps1CgCBWUwT-s11_MR1D3FLE";
     const CHAT_ID = "-5126230189";
 
     const message = `
 📞 *Заказ обратного звонка из модального окна!*
-📱 *Телефон:* ${phone}
+📱 *Телефон:* ${formattedPhone}
 ⏳ *Срочность:* Перезвонить в течение 5 минут
     `.trim();
 
-    try {
-      const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          chat_id: CHAT_ID,
-          text: message,
-          parse_mode: "Markdown",
-        }),
-      });
-
-      if (response.ok) {
-        setSubmitted(true);
-      } else {
-        console.error("Ошибка Telegram API:", response.statusText);
-        setSubmitted(true);
+    // Асинхронная отправка в Telegram на фоне
+    (async () => {
+      try {
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            chat_id: CHAT_ID,
+            text: message,
+            parse_mode: "Markdown",
+          }),
+        });
+      } catch (error) {
+        console.error("Ошибка отправки звонка в Telegram:", error);
       }
-    } catch (error) {
-      console.error("Ошибка сети при отправке звонка:", error);
-      setSubmitted(true);
-    }
+    })();
   };
 
   return (
@@ -69,8 +92,8 @@ const CallbackModal = () => {
               placeholder="+7 (___) ___-__-__"
               required
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="w-full p-4 rounded-xl border-2 border-border bg-background text-foreground focus:border-primary focus:outline-none transition-colors text-lg mb-4"
+              onChange={handlePhoneChange}
+              className="w-full p-4 rounded-xl border-2 border-border bg-background text-foreground focus:border-primary focus:outline-none transition-colors text-lg mb-4 font-mono text-center"
             />
             <button type="submit" className="btn-primary w-full flex items-center justify-center gap-2 text-lg py-4">
               <Send className="w-5 h-5" /> Перезвоните мне
@@ -83,7 +106,6 @@ const CallbackModal = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <p className="font-heading font-bold text-xl text-foreground">Спасибо! Ожидайте звонка</p>
           </div>
         )}
       </div>

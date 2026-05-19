@@ -25,7 +25,7 @@ const Header = () => {
               <Phone className="w-4 h-4" />
               +7 (999) 904-77-71
             </a>
-            <a href="mailto:info@krovlya-msk.ru" className="hidden sm:flex items-center gap-2 hover:text-primary transition-colors">
+            <a href="mailto:samlir272@yandex.ru" className="hidden sm:flex items-center gap-2 hover:text-primary transition-colors">
               <Mail className="w-4 h-4" />
               info@krovlya-msk.ru
             </a>

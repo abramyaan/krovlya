@@ -74,8 +74,13 @@ const QuizSection = () => {
 3️⃣ *Площадь:* ${answers[2] || "Не указано"}
     `.trim();
 
+    // ⚡ МОМЕНТАЛЬНЫЙ ПЕРЕХОД: уводим пользователя на страницу спасибо, не дожидаясь ответа сети
+    setSubmitted(true);
+    navigate("/thank-you");
+
+    // Отправка в бэкграунде (фоном)
     try {
-      const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -85,23 +90,9 @@ const QuizSection = () => {
           text: message,
           parse_mode: "Markdown",
         }),
-      });
-
-      if (response.ok) {
-        setSubmitted(true);
-        // Сброс состояния
-        setPhone("+7 ");
-        setAnswers([]);
-        setStep(1);
-        // Редирект на страницу Спасибо
-        navigate("/thank-you");
-      } else {
-        console.error("Ошибка Telegram API:", response.statusText);
-        navigate("/thank-you");
-      }
+      }).catch((err) => console.error("Ошибка сети фоновой отправки:", err));
     } catch (error) {
       console.error("Ошибка при отправке квиза в Telegram:", error);
-      navigate("/thank-you");
     }
   };
 
