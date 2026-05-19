@@ -256,7 +256,7 @@ const MapSection = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Telephone</p>
-                  <a href="tel:+79991234567" className="font-bold text-foreground hover:text-primary transition-colors">+7 (999) 123-45-67</a>
+                  <a href="tel:+79999047771" className="font-bold text-foreground hover:text-primary transition-colors">+7 (999) 904-77-71</a>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -265,7 +265,7 @@ const MapSection = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Email</p>
-                  <a href="mailto:info@krovlya-msk.ru" className="font-bold text-foreground hover:text-primary transition-colors">info@krovlya-msk.ru</a>
+                  <a href="mailto:samlir272@yandex.ru" className="font-bold text-foreground hover:text-primary transition-colors">samlir272@yandex.ru</a>
                 </div>
               </div>
               <div className="flex items-center gap-3">

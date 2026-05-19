@@ -31,11 +31,11 @@ const Footer = () => {
           <div>
             <h4 className="font-heading font-bold mb-4">Контакты</h4>
             <div className="space-y-3 text-primary-foreground/60 text-sm">
-              <a href="tel:+79991234567" className="flex items-center gap-2 hover:text-primary transition-colors">
-                <Phone className="w-4 h-4" /> +7 (999) 123-45-67
+              <a href="tel:+79999047771" className="flex items-center gap-2 hover:text-primary transition-colors">
+                <Phone className="w-4 h-4" /> +7 (999) 904-77-71
               </a>
-              <a href="mailto:info@krovlya-msk.ru" className="flex items-center gap-2 hover:text-primary transition-colors">
-                <Mail className="w-4 h-4" /> info@krovlya-msk.ru
+              <a href="mailto:samlir272@yandex.ru" className="flex items-center gap-2 hover:text-primary transition-colors">
+                <Mail className="w-4 h-4" /> samlir272@yandex.ru
               </a>
               <p className="flex items-center gap-2">
                 <MapPin className="w-4 h-4" /> Москва и МО

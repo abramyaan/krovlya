@@ -159,8 +159,8 @@ const PricesSection = () => {
             <a href="#map" className="btn-primary text-lg px-8 py-4 rounded-xl shadow-md transition-transform active:scale-95">
               Оставить заявку
             </a>
-            <a href="tel:+79991234567" className="btn-outline-primary text-lg px-8 py-4 rounded-xl transition-transform active:scale-95">
-              Позвоните нам: +7 (999) 123-45-67
+            <a href="tel:+79999047771" className="btn-outline-primary text-lg px-8 py-4 rounded-xl transition-transform active:scale-95">
+              Позвоните нам: +7 (999) 904-77-71
             </a>
           </div>
         </div>
