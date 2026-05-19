@@ -1,43 +1,42 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom"; // Импортируем хук для редиректа
+import { useNavigate } from "react-router-dom"; // Добавили хук для перехода
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, ChevronLeft, Send } from "lucide-react";
 
 const questions = [
   {
     q: "Какие кровельные работы необходимо выполнить?",
-    options: [["Монтаж кровли"], ["Ремонт кровли"], ["Утепление крыши"], ["Демонтаж кровли"], ["Гидроизоляция"], ["Другое"]],
+    options: ["Монтаж кровли", "Ремонт кровли", "Утепление крыши", "Демонтаж кровли", "Гидроизоляция", "Другое"],
   },
   {
     q: "Какой тип кровли?",
-    options: [["Металлочерепица"], ["Мягкая кровля"], ["Профнастил"], ["Фальцевая кровля"], ["Плоская кровля"], ["Не знаю"]],
+    options: ["Металлочерепица", "Мягкая кровля", "Профнастил", "Фальцевая кровля", "Плоская кровля", "Не знаю"],
   },
   {
     q: "Какая примерная площадь кровли?",
-    options: [["До 50 м²"], ["50–100 м²"], ["100–200 м²"], ["200–500 м²"], ["Более 500 м²"], ["Не знаю"]],
+    options: ["До 50 м²", "50–100 м²", "100–200 м²", "200–500 м²", "Более 500 м²", "Не знаю"],
   },
 ];
 
 const QuizSection = () => {
-  const navigate = useNavigate(); // Инициализируем навигацию
-  const [step, setStep] = useState(0);
+  const navigate = useNavigate(); // Инициализируем навигацию для редиректа
+  const [step, setStep] = useState(1);
   const [answers, setAnswers] = useState<string[]>([]);
-  const [phone, setPhone] = useState("+7 "); // Изначально задаем жесткий префикс
+  const [phone, setPhone] = useState("+7 "); // Префикс по умолчанию как в MapSection
+  const [submitted, setSubmitted] = useState(false);
 
-  const isLastQuestion = step === questions.length;
-  const progress = (step / (questions.length + 1)) * 100;
+  const isLastQuestion = step === questions.length + 1;
+  const progress = ((step - 1) / questions.length) * 100;
 
-  // 1. Шаблон для Телефона: держит префикс +7, пускает только цифры и ограничивает длину
+  // Валидация инпута телефона на лету — как в MapSection
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
 
-    // Если пользователь пытается стереть "+7 ", возвращаем префикс на место
     if (!val.startsWith("+7 ")) {
       setPhone("+7 ");
       return;
     }
 
-    // Извлекаем только ту часть номера, которую вводит пользователь после "+7 "
     const inputNumbers = val.slice(3);
     const cleanNumbers = inputNumbers.replace(/[^\d]/g, "");
 
@@ -48,13 +47,13 @@ const QuizSection = () => {
 
   const handleOptionSelect = (option: string) => {
     const newAnswers = [...answers];
-    newAnswers[step] = option;
+    newAnswers[step - 1] = option;
     setAnswers(newAnswers);
     setStep(step + 1);
   };
 
   const handleSubmit = async () => {
-    // Валидация перед отправкой
+    // Валидация корректности номера телефона перед отправкой
     const formattedPhone = phone.replace(/\s/g, "");
     if (formattedPhone.length !== 12) {
       alert("Номер телефона должен содержать 11 цифр");
@@ -64,9 +63,9 @@ const QuizSection = () => {
     const BOT_TOKEN = "8620797217:AAEPQof7Tsrps1CgCBWUwT-s11_MR1D3FLE";
     const CHAT_ID = "-5126230189";
 
-    // Красиво форматируем ответы из квиза для Telegram
+    // Сборка сообщения со всеми ответами для ТГ группы
     const message = `
-📊 *Новая заявка со страницы Квиза!*
+📊 *Новая заявка с Квиза!*
 📞 *Телефон:* ${formattedPhone}
 
 📋 *Ответы на вопросы:*
@@ -89,16 +88,16 @@ const QuizSection = () => {
       });
 
       if (response.ok) {
-        // Очищаем форму
+        setSubmitted(true);
+        // Сброс состояния
         setPhone("+7 ");
         setAnswers([]);
-        setStep(0);
-        
-        // Перенаправляем на общую страницу спасибо
+        setStep(1);
+        // Редирект на страницу Спасибо
         navigate("/thank-you");
       } else {
         console.error("Ошибка Telegram API:", response.statusText);
-        navigate("/thank-you"); // Всё равно перенаправляем, чтобы не ломать UX
+        navigate("/thank-you");
       }
     } catch (error) {
       console.error("Ошибка при отправке квиза в Telegram:", error);
@@ -118,7 +117,6 @@ const QuizSection = () => {
           </p>
         </div>
 
-        {/* Прогресс бар */}
         <div className="w-full bg-muted h-2 rounded-full mb-12 overflow-hidden">
           <motion.div
             className="h-full"
@@ -131,25 +129,7 @@ const QuizSection = () => {
 
         <div className="bg-card border-2 border-border rounded-2xl p-6 sm:p-10 shadow-sm relative overflow-hidden min-h-[350px] flex flex-col justify-between">
           <AnimatePresence mode="wait">
-            {step === 0 ? (
-              <motion.div
-                key="start"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="text-center py-8 flex flex-col items-center justify-center flex-grow"
-              >
-                <h3 className="font-heading font-black text-3xl text-foreground mb-4">
-                  Пройдите быстрый тест
-                </h3>
-                <p className="text-muted-foreground mb-8 max-w-md text-lg">
-                  В конце расчета вы получите подарок: бесплатный выезд инженера-замерщика на ваш объект
-                </p>
-                <button onClick={() => setStep(1)} className="btn-primary text-lg px-8 py-4 flex items-center gap-2">
-                  Начать расчет <ChevronRight className="w-5 h-5" />
-                </button>
-              </motion.div>
-            ) : !isLastQuestion ? (
+            {!isLastQuestion ? (
               <motion.div
                 key={step}
                 initial={{ opacity: 0, x: 20 }}
@@ -167,14 +147,14 @@ const QuizSection = () => {
                   {questions[step - 1].options.map((opt, idx) => (
                     <button
                       key={idx}
-                      onClick={() => handleOptionSelect(opt[0])}
+                      onClick={() => handleOptionSelect(opt)}
                       className={`text-left p-4 rounded-xl border-2 transition-all font-medium text-base active:scale-[0.99] ${
-                        answers[step - 1] === opt[0]
+                        answers[step - 1] === opt
                           ? "border-primary bg-primary/5 text-foreground"
                           : "border-border bg-background text-muted-foreground hover:text-foreground hover:border-primary/50"
                       }`}
                     >
-                      {opt[0]}
+                      {opt}
                     </button>
                   ))}
                 </div>
@@ -206,8 +186,7 @@ const QuizSection = () => {
             )}
           </AnimatePresence>
 
-          {/* Кнопка «Назад» */}
-          {step > 0 && (
+          {!submitted && step > 1 && step <= questions.length + 1 && (
             <button
               onClick={() => setStep(step - 1)}
               className="flex items-center gap-1 text-muted-foreground hover:text-foreground mt-6 transition-colors text-sm font-medium self-start active:scale-95"
