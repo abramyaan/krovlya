@@ -4,7 +4,7 @@ import { Phone } from "lucide-react";
 const FloatingPhone = () => {
   return (
     <a
-      href="tel:+79991234567"
+      href="tel:+79999047771"
       className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-14 h-14 rounded-full text-white shadow-xl transition-all duration-300 hover:scale-110 active:scale-95 will-change-transform md:bottom-8 md:right-8"
       style={{ 
         background: "var(--gradient-primary)",
