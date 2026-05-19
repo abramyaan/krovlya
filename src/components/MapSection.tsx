@@ -1,12 +1,14 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom"; // Импортируем хук для навигации
 import { motion } from "framer-motion";
-import { MapPin, Phone, Mail, Send, User, MessageSquare } from "lucide-react";
+import { MapPin, Phone, Mail, Send, User, MessageSquare, Camera, X } from "lucide-react";
 
 const MapSection = () => {
+  const navigate = useNavigate(); // Инициализируем навигацию
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("+7 "); // Изначально задаем жесткий префикс
   const [comment, setComment] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [photo, setPhoto] = useState<File | null>(null); // Стейт для хранения загруженного файла
 
   // 1. Фильтр для Имени: пропускает только буквы и пробелы
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -28,30 +30,42 @@ const MapSection = () => {
 
     // Извлекаем только ту часть номера, которую вводит пользователь после "+7 "
     const inputNumbers = val.slice(3);
-    
-    // Удаляем из нее всё, кроме чистых цифр
     const cleanNumbers = inputNumbers.replace(/[^\d]/g, "");
 
-    // Ограничиваем длину номера (в РФ 10 цифр после +7)
     if (cleanNumbers.length <= 10) {
       setPhone("+7 " + cleanNumbers);
     }
   };
 
+  // 3. Обработчик добавления фото с ограничением по размеру (до 5 МБ)
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Файл слишком тяжелый. Пожалуйста, выберите изображение размером до 5 МБ.");
+        return;
+      }
+      setPhoto(file);
+    }
+  };
+
+  // 4. Функция быстрой очистки выбранного файла
+  const clearPhoto = (e: React.MouseEvent) => {
+    e.preventDefault(); // Чтобы не триггерился клик по внешнему label
+    setPhoto(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Финальная проверка перед отправкой в ТГ
     if (name.trim().length < 2) {
       alert("Пожалуйста, введите корректное имя");
       return;
     }
 
-    // Убираем пробел из стейта для отправки (+7 9991234567 -> +79991234567)
     const formattedPhone = phone.replace(/\s/g, "");
-
-    // Проверяем, что в номере ровно 11 цифр (включая семерку)
-    if (formattedPhone.length !== 12) { // +7 и 10 цифр = 12 символов строки
+    if (formattedPhone.length !== 12) {
       alert("Номер телефона должен содержать 11 цифр");
       return;
     }
@@ -59,35 +73,61 @@ const MapSection = () => {
     const BOT_TOKEN = "8620797217:AAEPQof7Tsrps1CgCBWUwT-s11_MR1D3FLE";
     const CHAT_ID = "-5126230189";
 
+    // Строим текст сообщения для уведомления
     const message = `
-🔔 *Новая заявка с карты (Контакты)!*
+🔔 *Новая заявка с сайта!*
 👤 *Имя:* ${name.trim()}
 📞 *Телефон:* ${formattedPhone}
 💬 *Комментарий:* ${comment.trim() ? comment.trim() : "Не указан"}
     `.trim();
 
     try {
-      const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          chat_id: CHAT_ID,
-          text: message,
-          parse_mode: "Markdown",
-        }),
-      });
+      let response;
+
+      if (photo) {
+        // Если фото выбрано, шлем multipart/form-data на метод sendPhoto
+        const formData = new FormData();
+        formData.append("chat_id", CHAT_ID);
+        formData.append("photo", photo);
+        formData.append("caption", message);
+        formData.append("parse_mode", "Markdown");
+
+        response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+          method: "POST",
+          body: formData, // Браузер сам выставит нужные заголовки границы multipart формы
+        });
+      } else {
+        // Если фото не выбрано, шлем обычный текстовый JSON на sendMessage
+        response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            chat_id: CHAT_ID,
+            text: message,
+            parse_mode: "Markdown",
+          }),
+        });
+      }
 
       if (response.ok) {
-        setSubmitted(true);
+        // Сбрасываем поля формы
+        setName("");
+        setPhone("+7 ");
+        setComment("");
+        setPhoto(null);
+
+        // Перенаправляем на страницу «Спасибо»
+        navigate("/thank-you");
       } else {
-        console.error("Ошибка API Telegram:", response.statusText);
-        setSubmitted(true); 
+        console.error("Ошибка Telegram API:", response.statusText);
+        // Всё равно перекидываем пользователя на страницу спасибо, чтобы не ломать UX
+        navigate("/thank-you");
       }
     } catch (error) {
-      console.error("Ошибка сети при отправке в Telegram:", error);
-      setSubmitted(true);
+      console.error("Ошибка при отправке заявки в Telegram:", error);
+      navigate("/thank-you");
     }
   };
 
@@ -104,6 +144,7 @@ const MapSection = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Карта оптимизирована под мобильные устройства */}
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
@@ -120,6 +161,7 @@ const MapSection = () => {
             />
           </motion.div>
 
+          {/* Форма лидогенерации */}
           <motion.div
             id="lead-form"
             initial={{ opacity: 0, y: 15 }}
@@ -130,64 +172,83 @@ const MapSection = () => {
             <h3 className="font-heading font-bold text-2xl text-foreground mb-2">Оставить заявку</h3>
             <p className="text-muted-foreground text-sm mb-6">Оставьте ваши контакты, и наш специалист свяжется с вами для консультации</p>
             
-            {!submitted ? (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Инпут Имени */}
-                <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <input
-                    type="text"
-                    placeholder="Ваше имя (только буквы)"
-                    required
-                    value={name}
-                    onChange={handleNameChange}
-                    className="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-border bg-background text-foreground focus:border-primary focus:outline-none transition-colors"
-                  />
-                </div>
-
-                {/* Инпут Телефона */}
-                <div className="relative">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <input
-                    type="text"
-                    required
-                    value={phone}
-                    onChange={handlePhoneChange}
-                    className="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-border bg-background text-foreground focus:border-primary focus:outline-none transition-colors font-mono"
-                  />
-                </div>
-
-                <div className="relative">
-                  <MessageSquare className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <input
-                    type="text"
-                    placeholder="Комментарий (необязательно)"
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    className="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-border bg-background text-foreground focus:border-primary focus:outline-none transition-colors"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="btn-primary w-full flex items-center justify-center gap-2 text-lg py-4 shadow-md transition-all active:scale-[0.98]"
-                >
-                  <Send className="w-5 h-5" />
-                  Отправить заявку
-                </button>
-              </form>
-            ) : (
-              <div className="text-center py-8">
-                <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ background: "var(--gradient-primary)" }}>
-                  <svg className="w-8 h-8 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <h3 className="font-heading font-bold text-2xl text-foreground mb-2">Заявка отправлена!</h3>
-                <p className="text-muted-foreground">Мы свяжемся с вами в течение 15 минут</p>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="relative">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Ваше имя (только буквы)"
+                  required
+                  value={name}
+                  onChange={handleNameChange}
+                  className="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-border bg-background text-foreground focus:border-primary focus:outline-none transition-colors"
+                />
               </div>
-            )}
 
+              <div className="relative">
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <input
+                  type="text"
+                  required
+                  value={phone}
+                  onChange={handlePhoneChange}
+                  className="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-border bg-background text-foreground focus:border-primary focus:outline-none transition-colors font-mono"
+                />
+              </div>
+
+              <div className="relative">
+                <MessageSquare className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Комментарий (необязательно)"
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  className="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-border bg-background text-foreground focus:border-primary focus:outline-none transition-colors"
+                />
+              </div>
+
+              {/* Поле выбора файла изображения */}
+              <div className="relative">
+                <label className="flex items-center gap-3 p-4 rounded-xl border-2 border-dashed border-border bg-background cursor-pointer hover:border-primary/50 transition-colors justify-between">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Camera className="w-6 h-6 text-muted-foreground shrink-0" />
+                    <div className="text-left truncate">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {photo ? `Выбран файл: ${photo.name}` : "Прикрепить фото крыши"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">До 5 МБ (необязательно)</p>
+                    </div>
+                  </div>
+                  
+                  {photo && (
+                    <button 
+                      onClick={clearPhoto}
+                      className="p-1 rounded-full hover:bg-accent text-muted-foreground hover:text-destructive transition-colors shrink-0"
+                      title="Удалить фото"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  )}
+                  
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden" // Прячем дефолтный инпут
+                  />
+                </label>
+              </div>
+
+              <button
+                type="submit"
+                className="btn-primary w-full flex items-center justify-center gap-2 text-lg py-4 shadow-md transition-all active:scale-[0.98]"
+              >
+                <Send className="w-5 h-5" />
+                Отправить заявку
+              </button>
+            </form>
+
+            {/* Контакты компании под формой */}
             <div className="mt-8 space-y-4 border-t border-border pt-6">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--gradient-primary)" }}>
