@@ -1,5 +1,27 @@
 import { useState } from "react";
-import { Phone, Mail, Menu, X, MessageCircle } from "lucide-react";
+import { Phone, Mail, Menu, X } from "lucide-react";
+
+// Иконка Telegram (официальный бренд-цвет)
+const TelegramIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="12" fill="#24A1DE"/>
+    <path
+      d="M5.35 11.98L17.5 7.2c.57-.21 1.07.14.88.99l-2.05 9.66c-.15.68-.55.84-1.12.52l-3.1-2.29-1.5 1.44c-.16.16-.3.3-.62.3l.22-3.16 5.74-5.18c.25-.22-.05-.35-.38-.12L7.03 13.6 3.96 12.64c-.67-.21-.68-.67.4-1.06z"
+      fill="white"
+    />
+  </svg>
+);
+
+// Иконка MAX (официальная, с maxicons.ru)
+const MaxIcon = ({ className }: { className?: string }) => (
+  <img
+    src="https://maxicons.ru/icons/MAX.svg"
+    alt="MAX"
+    className={className}
+    width={24}
+    height={24}
+  />
+);
 import { motion, AnimatePresence } from "framer-motion";
 
 const navItems = [
@@ -27,36 +49,36 @@ const Header = () => {
             </a>
             <a href="mailto:samlir272@yandex.ru" className="hidden sm:flex items-center gap-2 hover:text-primary transition-colors">
               <Mail className="w-4 h-4" />
-              info@krovlya-msk.ru
+              samlir272@yandex.ru
             </a>
           </div>
           
-          {/* Блок мессенджеров: Ссылки ведут прямо в чат по номеру телефона */}
+          {/* Блок мессенджеров */}
           <div className="flex items-center gap-4">
             <span className="text-xs text-muted-foreground hidden xs:inline">Написать нам:</span>
             
-            {/* Telegram чат */}
+            {/* Telegram чат — открывает диалог с номером напрямую */}
             <a 
               href="https://t.me/+79999047771" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="hover:text-primary transition-colors flex items-center gap-1 bg-background/10 px-2 py-1 rounded text-xs"
+              className="hover:opacity-80 transition-opacity"
               title="Написать в Telegram"
             >
-              <MessageCircle className="w-3.5 h-3.5 text-[#24A1DE]" />
-              <span>TG</span>
+              <TelegramIcon className="w-6 h-6" />
             </a>
 
-            {/* MAX чат */}
+            {/* MAX чат — ссылка вида https://max.ru/u/ХЕШ получается в приложении MAX:
+                Профиль → иконка QR-кода (левый верхний угол) → Поделиться → скопировать ссылку.
+                Замени YOUR_PROFILE_HASH на свой хеш из приложения. */}
             <a 
-              href="https://im.max.ru/+79999047771" /* Замени на точный URL твоего корпоративного пространства MAX, если требуется */
+              href="https://max.ru/u/YOUR_PROFILE_HASH"
               target="_blank" 
               rel="noopener noreferrer" 
-              className="hover:text-primary transition-colors flex items-center gap-1 bg-background/10 px-2 py-1 rounded text-xs"
+              className="hover:opacity-80 transition-opacity"
               title="Написать в MAX"
             >
-              <MessageCircle className="w-3.5 h-3.5 text-primary" />
-              <span>MAX</span>
+              <MaxIcon className="w-6 h-6" />
             </a>
           </div>
         </div>
