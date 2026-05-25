@@ -23,38 +23,36 @@ const QuizSection = () => {
   const [step, setStep] = useState(1);
   const [answers, setAnswers] = useState<string[]>([]);
   const [phone, setPhone] = useState("+7 "); // Префикс по умолчанию как в MapSection
-  const [submitted, setSubmitted] = useState(false);
-
-  const isLastQuestion = step === questions.length + 1;
-  const progress = ((step - 1) / questions.length) * 100;
-
-  // Валидация инпута телефона на лету — как в MapSection
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-
-    if (!val.startsWith("+7 ")) {
-      setPhone("+7 ");
-      return;
-    }
-
-    const inputNumbers = val.slice(3);
-    const cleanNumbers = inputNumbers.replace(/[^\d]/g, "");
-
-    if (cleanNumbers.length <= 10) {
-      setPhone("+7 " + cleanNumbers);
-    }
-  };
 
   const handleOptionSelect = (option: string) => {
     const newAnswers = [...answers];
     newAnswers[step - 1] = option;
     setAnswers(newAnswers);
-    setStep(step + 1);
+
+    setTimeout(() => {
+      setStep(step + 1);
+    }, 300);
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (!val.startsWith("+7 ")) {
+      setPhone("+7 ");
+      return;
+    }
+    const digits = val.slice(3).replace(/\D/g, "");
+    if (digits.length <= 10) {
+      let formatted = "+7 ";
+      if (digits.length > 0) formatted += digits.slice(0, 3);
+      if (digits.length > 3) formatted += " " + digits.slice(3, 6);
+      if (digits.length > 6) formatted += "-" + digits.slice(6, 8);
+      if (digits.length > 8) formatted += "-" + digits.slice(8, 10);
+      setPhone(formatted);
+    }
   };
 
   const handleSubmit = async () => {
-    // Валидация корректности номера телефона перед отправкой
-    const formattedPhone = phone.replace(/\s/g, "");
+    const formattedPhone = phone.replace(/\s/g, "").replace(/-/g, "");
     if (formattedPhone.length !== 12) {
       alert("Номер телефона должен содержать 11 цифр");
       return;
@@ -63,86 +61,75 @@ const QuizSection = () => {
     const BOT_TOKEN = "8620797217:AAEPQof7Tsrps1CgCBWUwT-s11_MR1D3FLE";
     const CHAT_ID = "-5126230189";
 
-    // Сборка сообщения со всеми ответами для ТГ группы
     const message = `
-📊 *Новая заявка с Квиза!*
-📞 *Телефон:* ${formattedPhone}
-
+🎯 *Новая заявка из КВИЗа!*
 📋 *Ответы на вопросы:*
-1️⃣ *Работы:* ${answers[0] || "Не указано"}
-2️⃣ *Тип кровли:* ${answers[1] || "Не указано"}
-3️⃣ *Площадь:* ${answers[2] || "Не указано"}
+1. Работы: ${answers[0] || "Не выбрано"}
+2. Тип кровли: ${answers[1] || "Не выбрано"}
+3. Площадь: ${answers[2] || "Не выбрано"}
+
+📱 *Телефон:* ${formattedPhone}
     `.trim();
 
-    // ⚡ МОМЕНТАЛЬНЫЙ ПЕРЕХОД: уводим пользователя на страницу спасибо, не дожидаясь ответа сети
-    setSubmitted(true);
-    navigate("/thank-you");
-
-    // Отправка в бэкграунде (фоном)
     try {
-      fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      // 1. Сначала шлём запрос в Telegram API и ждем промис
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           chat_id: CHAT_ID,
           text: message,
           parse_mode: "Markdown",
         }),
-      }).catch((err) => console.error("Ошибка сети фоновой отправки:", err));
+      });
+
+      // 2. Только после завершения fetch делаем физический переход на /thank-you
+      navigate("/thank-you");
     } catch (error) {
-      console.error("Ошибка при отправке квиза в Telegram:", error);
+      console.error("Ошибка квиза:", error);
+      navigate("/thank-you");
     }
   };
 
   return (
-    <section id="quiz" className="py-20 bg-background" style={{ contentVisibility: "auto" } as React.CSSProperties}>
-      <div className="container mx-auto px-4 max-w-3xl">
-        <div className="text-center mb-12">
-          <h2 className="section-title text-foreground">
-            Узнайте стоимость <span className="text-primary">за 1 минуту</span>
-          </h2>
-          <p className="section-subtitle mt-4">
-            Ответьте на 3 простых вопроса, чтобы мы рассчитали точную стоимость материалов и работ
-          </p>
-        </div>
+    <section id="quiz" className="py-20 bg-muted/30 border-y border-border">
+      <div className="container mx-auto px-4">
+        <div className="max-w-3xl mx-auto bg-card border-2 border-border rounded-3xl p-6 md:p-10 shadow-xl relative overflow-hidden">
+          
+          {/* Progress bar */}
+          <div className="absolute top-0 left-0 right-0 h-1.5 bg-border">
+            <motion.div 
+              className="h-full bg-primary"
+              initial={{ width: "0%" }}
+              animate={{ width: `${(step / (questions.length + 1)) * 100}%` }}
+              transition={{ duration: 0.3 }}
+            />
+          </div>
 
-        <div className="w-full bg-muted h-2 rounded-full mb-12 overflow-hidden">
-          <motion.div
-            className="h-full"
-            style={{ background: "var(--gradient-primary)" }}
-            initial={{ width: 0 }}
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.3 }}
-          />
-        </div>
-
-        <div className="bg-card border-2 border-border rounded-2xl p-6 sm:p-10 shadow-sm relative overflow-hidden min-h-[350px] flex flex-col justify-between">
           <AnimatePresence mode="wait">
-            {!isLastQuestion ? (
+            {step <= questions.length ? (
               <motion.div
                 key={step}
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="flex-grow flex flex-col justify-center"
+                transition={{ duration: 0.2 }}
               >
-                <span className="text-primary font-bold text-sm uppercase tracking-wider mb-2 block">
+                <span className="text-xs font-bold uppercase tracking-wider text-primary bg-primary/10 px-3 py-1 rounded-full mb-4 inline-block">
                   Вопрос {step} из {questions.length}
                 </span>
-                <h3 className="font-heading font-bold text-2xl text-foreground mb-6">
+                <h3 className="font-heading font-bold text-xl md:text-2xl text-foreground mb-6">
                   {questions[step - 1].q}
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {questions[step - 1].options.map((opt, idx) => (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {questions[step - 1].options.map((opt) => (
                     <button
-                      key={idx}
+                      key={opt}
                       onClick={() => handleOptionSelect(opt)}
-                      className={`text-left p-4 rounded-xl border-2 transition-all font-medium text-base active:scale-[0.99] ${
+                      className={`p-4 rounded-xl border-2 text-left transition-all text-sm md:text-base font-medium active:scale-[0.99] ${
                         answers[step - 1] === opt
-                          ? "border-primary bg-primary/5 text-foreground"
-                          : "border-border bg-background text-muted-foreground hover:text-foreground hover:border-primary/50"
+                          ? "border-primary bg-primary/5 text-primary"
+                          : "border-border bg-background text-foreground hover:border-primary/40 hover:bg-muted/50"
                       }`}
                     >
                       {opt}
@@ -152,14 +139,15 @@ const QuizSection = () => {
               </motion.div>
             ) : (
               <motion.div
-                key="form"
+                key="form-step"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="text-center py-4 flex flex-col justify-center flex-grow"
+                transition={{ duration: 0.2 }}
+                className="text-center py-4"
               >
                 <h3 className="font-heading font-bold text-2xl text-foreground mb-2">Расчет готов!</h3>
-                <p className="text-muted-foreground mb-6">Оставьте ваш номер телефона, и мы пришлем смету</p>
+                <p className="text-muted-foreground mb-6">Оставьте ваш number телефона, и мы пришлем смету</p>
                 <div className="max-w-md mx-auto w-full">
                   <input
                     type="text"
@@ -177,7 +165,7 @@ const QuizSection = () => {
             )}
           </AnimatePresence>
 
-          {!submitted && step > 1 && step <= questions.length + 1 && (
+          {step > 1 && step <= questions.length + 1 && (
             <button
               onClick={() => setStep(step - 1)}
               className="flex items-center gap-1 text-muted-foreground hover:text-foreground mt-6 transition-colors text-sm font-medium self-start active:scale-95"
