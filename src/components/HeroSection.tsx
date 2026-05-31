@@ -17,10 +17,12 @@ const HeroSection = () => {
         <img 
           src={heroImg} 
           alt="Кровельные работы" 
-          className="w-full h-full object-cover will-change-transform" 
+          className="w-full h-full object-cover"
           width={1920} 
           height={1080} 
-          loading="eager" // Предотвращает отложенную загрузку LCP изображения
+          loading="eager"
+          fetchPriority="high"
+          decoding="sync"
         />
         <div className="absolute inset-0" style={{ background: "var(--hero-overlay)" }} />
       </div>
@@ -49,7 +51,7 @@ const HeroSection = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.15 + i * 0.05 }}
-                  className="flex items-center gap-3 will-change-transform"
+                  className="flex items-center gap-3"
                 >
                   <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--gradient-primary)" }}>
                     <usp.icon className="w-4 h-4 text-primary-foreground" />
@@ -64,10 +66,10 @@ const HeroSection = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="mb-12 will-change-transform"
+              className="mb-12"
             >
               <a
-                href="#lead-form"
+                href="#map"
                 className="btn-primary inline-flex items-center justify-center gap-3 text-lg py-4 px-8 md:px-12 rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
               >
                 Оставить заявку

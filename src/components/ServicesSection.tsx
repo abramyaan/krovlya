@@ -54,7 +54,7 @@ const ServicesSection = () => {
               <div className="p-6">
                 <h3 className="font-heading font-bold text-xl text-foreground mb-2">{s.title}</h3>
                 <p className="text-muted-foreground text-sm mb-4">{s.desc}</p>
-                <a href="#quiz" className="btn-primary inline-block text-sm !py-2.5 !px-5">
+                <a href="#map" className="btn-primary inline-block text-sm !py-2.5 !px-5">
                   Оставить заявку
                 </a>
               </div>

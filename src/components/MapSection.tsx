@@ -47,9 +47,9 @@ const MapSection = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const formattedPhone = phone.replace(/\s/g, "");
-    if (formattedPhone.length !== 12) {
-      alert("Номер телефона должен содержать 11 цифр");
+    const cleanPhone = phone.replace(/\s/g, "");
+    if (cleanPhone.length < 12) {
+      alert("Пожалуйста, введите корректный номер телефона");
       return;
     }
 
@@ -59,7 +59,7 @@ const MapSection = () => {
     const message = `
 📝 *Новая заявка с формы у карты!*
 👤 *Имя:* ${name || "Не указано"}
-📱 *Телефон:* ${formattedPhone}
+📱 *Телефон:* ${phone}
 💬 *Комментарий:* ${comment || "Без комментария"}
 📎 *Фото:* ${photo ? `Прикреплено (${photo.name})` : "Нет"}
     `.trim();
@@ -88,11 +88,21 @@ const MapSection = () => {
         });
       }
 
-      // 3. После успешного завершения всех асинхронных fetch — делаем редирект для Директа
+      // Фиксируем цель в Яндекс.Метрике
+      if (typeof window !== "undefined" && (window as any).ym) {
+        (window as any).ym(109268456, "reachGoal", "form_submit");
+      }
+
+      // Сбрасываем форму и переходим на страницу благодарности
+      setName(""); setPhone("+7 "); setComment(""); setPhoto(null);
       navigate("/thank-you");
 
     } catch (error) {
       console.error("Ошибка отправки:", error);
+      if (typeof window !== "undefined" && (window as any).ym) {
+        (window as any).ym(109268456, "reachGoal", "form_submit");
+      }
+      setName(""); setPhone("+7 "); setComment(""); setPhoto(null);
       navigate("/thank-you");
     }
   };
@@ -185,9 +195,10 @@ const MapSection = () => {
           >
             <div className="rounded-3xl border-2 border-border overflow-hidden shadow-lg h-[300px] sm:h-[350px] md:h-[400px] w-full relative bg-muted/20">
               <iframe 
-                src="https://yandex.ru/map-widget/v1/?um=constructor%3A36ed75dfbdf3684bc22ba8c31b3bf07e997a3ee3e7f45c2fdfdc0858e390bd01&amp;source=constructor" 
-                width="100%" 
-                height="100%" 
+                loading="lazy"
+                src="https://yandex.ru/map-widget/v1/?um=constructor%3A36ed75dfbdf3684bc22ba8c31b3bf07e997a3ee3e7f45c2fdfdc0858e390bd01&amp;source=constructor"
+                width="100%"
+                height="100%"
                 frameBorder="0"
                 className="absolute inset-0"
                 title="Карта офиса Кровля МСК"

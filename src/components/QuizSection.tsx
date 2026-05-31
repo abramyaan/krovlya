@@ -1,3 +1,4 @@
+import React from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom"; // Добавили хук для перехода
 import { motion, AnimatePresence } from "framer-motion";
@@ -51,10 +52,12 @@ const QuizSection = () => {
     }
   };
 
-  const handleSubmit = async () => {
-    const formattedPhone = phone.replace(/\s/g, "").replace(/-/g, "");
-    if (formattedPhone.length !== 12) {
-      alert("Номер телефона должен содержать 11 цифр");
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault(); // Предотвращаем перезагрузку страницы
+
+    const cleanPhone = phone.replace(/[^0-9+]/g, "");
+    if (cleanPhone.length < 12) {
+      alert("Пожалуйста, введите корректный номер телефона");
       return;
     }
 
@@ -68,11 +71,10 @@ const QuizSection = () => {
 2. Тип кровли: ${answers[1] || "Не выбрано"}
 3. Площадь: ${answers[2] || "Не выбрано"}
 
-📱 *Телефон:* ${formattedPhone}
+📱 *Телефон:* ${phone}
     `.trim();
 
     try {
-      // 1. Сначала шлём запрос в Telegram API и ждем промис
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -83,10 +85,15 @@ const QuizSection = () => {
         }),
       });
 
-      // 2. Только после завершения fetch делаем физический переход на /thank-you
+      if (typeof window !== "undefined" && (window as any).ym) {
+        (window as any).ym(109268456, "reachGoal", "form_submit");
+      }
       navigate("/thank-you");
     } catch (error) {
       console.error("Ошибка квиза:", error);
+      if (typeof window !== "undefined" && (window as any).ym) {
+        (window as any).ym(109268456, "reachGoal", "form_submit");
+      }
       navigate("/thank-you");
     }
   };
@@ -147,8 +154,10 @@ const QuizSection = () => {
                 className="text-center py-4"
               >
                 <h3 className="font-heading font-bold text-2xl text-foreground mb-2">Расчет готов!</h3>
-                <p className="text-muted-foreground mb-6">Оставьте ваш number телефона, и мы пришлем смету</p>
-                <div className="max-w-md mx-auto w-full">
+                <p className="text-muted-foreground mb-6">Оставьте ваш номер телефона, и мы пришлем смету</p>
+                
+                {/* Обернули в форму, чтобы кнопка и Enter работали как надо */}
+                <form onSubmit={handleSubmit} className="max-w-md mx-auto w-full">
                   <input
                     type="text"
                     required
@@ -156,16 +165,16 @@ const QuizSection = () => {
                     onChange={handlePhoneChange}
                     className="w-full p-4 rounded-xl border-2 border-border bg-background text-foreground focus:border-primary focus:outline-none transition-colors text-xl mb-4 font-mono text-center"
                   />
-                  <button onClick={handleSubmit} className="btn-primary w-full flex items-center justify-center gap-2 text-lg py-4">
+                  <button type="submit" className="btn-primary w-full flex items-center justify-center gap-2 text-lg py-4">
                     <Send className="w-5 h-5" />
                     Получить расчёт
                   </button>
-                </div>
+                </form>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {step > 1 && step <= questions.length + 1 && (
+          {step > 1 && (
             <button
               onClick={() => setStep(step - 1)}
               className="flex items-center gap-1 text-muted-foreground hover:text-foreground mt-6 transition-colors text-sm font-medium self-start active:scale-95"

@@ -16,7 +16,7 @@ const FloatingPhone = () => {
       <span className="absolute inset-0 rounded-full bg-primary/40 animate-ping pointer-events-none" style={{ animationDuration: '2s' }} />
       
       {/* Иконка телефона */}
-      <Phone className="w-6 h-6 animate-pulse" />
+      <Phone className="w-6 h-6" />
     </a>
   );
 };

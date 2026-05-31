@@ -34,9 +34,10 @@ const CallbackModal = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const formattedPhone = phone.replace(/\s/g, "");
-    if (formattedPhone.length !== 12) {
-      alert("Номер телефона должен содержать 11 цифр");
+    // Очищаем от пробелов для проверки чистых цифр (должно быть 11 цифр: 7 + 10 цифр номера)
+    const cleanPhone = phone.replace(/\s/g, "");
+    if (cleanPhone.length < 12) {
+      alert("Пожалуйста, введите корректный номер телефона");
       return;
     }
 
@@ -45,12 +46,12 @@ const CallbackModal = () => {
 
     const message = `
 📞 *Заказ обратного звонка из модального окна!*
-📱 *Телефон:* ${formattedPhone}
+📱 *Телефон:* ${phone}
 ⏳ *Срочность:* Перезвонить в течение 5 минут
     `.trim();
 
     try {
-      // 1. Сначала дожидаемся отправки в ТГ
+      // Отправляем в Telegram и ждем ответа
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: "POST",
         headers: {
@@ -63,14 +64,18 @@ const CallbackModal = () => {
         }),
       });
 
-      // 2. После успешного ответа закрываем модалку и делаем железный редирект для Метрики
       close();
-      navigate("/thank-you");
+      if (typeof window !== "undefined" && (window as any).ym) {
+        (window as any).ym(109268456, "reachGoal", "form_submit");
+      }
+      navigate("/thank-you"); // Переход на страницу спасибо
     } catch (error) {
       console.error("Ошибка отправки формы:", error);
-      // Даже если сеть подвела, редиректим, чтобы Яндекс зафиксировал лид
       close();
-      navigate("/thank-you");
+      if (typeof window !== "undefined" && (window as any).ym) {
+        (window as any).ym(109268456, "reachGoal", "form_submit");
+      }
+      navigate("/thank-you"); // Редиректим в любом случае, чтобы директ зафиксировал клик
     }
   };
 
