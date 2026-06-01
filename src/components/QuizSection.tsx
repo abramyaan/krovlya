@@ -52,8 +52,11 @@ const QuizSection = () => {
     }
   };
 
+  const escHtml = (str: string) =>
+    str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); // Предотвращаем перезагрузку страницы
+    e.preventDefault();
 
     const cleanPhone = phone.replace(/[^0-9+]/g, "");
     if (cleanPhone.length < 12) {
@@ -64,26 +67,27 @@ const QuizSection = () => {
     const BOT_TOKEN = "8620797217:AAEPQof7Tsrps1CgCBWUwT-s11_MR1D3FLE";
     const CHAT_ID = "-5126230189";
 
-    const message = `
-🎯 *Новая заявка из КВИЗа!*
-📋 *Ответы на вопросы:*
-1. Работы: ${answers[0] || "Не выбрано"}
-2. Тип кровли: ${answers[1] || "Не выбрано"}
-3. Площадь: ${answers[2] || "Не выбрано"}
-
-📱 *Телефон:* ${phone}
-    `.trim();
+    const message = [
+      "🎯 <b>Новая заявка из КВИЗа!</b>",
+      "<b>Ответы на вопросы:</b>",
+      `1. Работы: ${escHtml(answers[0] || "Не выбрано")}`,
+      `2. Тип кровли: ${escHtml(answers[1] || "Не выбрано")}`,
+      `3. Площадь: ${escHtml(answers[2] || "Не выбрано")}`,
+      "",
+      `📱 <b>Телефон:</b> ${escHtml(phone)}`,
+    ].join("\n");
 
     try {
-      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           chat_id: CHAT_ID,
           text: message,
-          parse_mode: "Markdown",
+          parse_mode: "HTML",
         }),
       });
+      if (!res.ok) console.error("TG quiz error:", await res.text());
 
       if (typeof window !== "undefined" && (window as any).ym) {
         (window as any).ym(109268456, "reachGoal", "form_submit");

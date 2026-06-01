@@ -44,15 +44,14 @@ const CallbackModal = () => {
     const BOT_TOKEN = "8620797217:AAEPQof7Tsrps1CgCBWUwT-s11_MR1D3FLE";
     const CHAT_ID = "-5126230189";
 
-    const message = `
-📞 *Заказ обратного звонка из модального окна!*
-📱 *Телефон:* ${phone}
-⏳ *Срочность:* Перезвонить в течение 5 минут
-    `.trim();
+    const message = [
+      "📞 <b>Заказ обратного звонка!</b>",
+      `📱 <b>Телефон:</b> ${phone}`,
+      "⏳ <b>Срочность:</b> Перезвонить в течение 5 минут",
+    ].join("\n");
 
     try {
-      // Отправляем в Telegram и ждем ответа
-      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -60,9 +59,10 @@ const CallbackModal = () => {
         body: JSON.stringify({
           chat_id: CHAT_ID,
           text: message,
-          parse_mode: "Markdown",
+          parse_mode: "HTML",
         }),
       });
+      if (!res.ok) console.error("TG callback error:", await res.text());
 
       close();
       if (typeof window !== "undefined" && (window as any).ym) {

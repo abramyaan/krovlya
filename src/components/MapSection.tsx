@@ -44,6 +44,10 @@ const MapSection = () => {
     setPhoto(null);
   };
 
+  // Экранируем спецсимволы HTML чтобы пользовательский ввод не сломал разметку
+  const escHtml = (str: string) =>
+    str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -56,25 +60,27 @@ const MapSection = () => {
     const BOT_TOKEN = "8620797217:AAEPQof7Tsrps1CgCBWUwT-s11_MR1D3FLE";
     const CHAT_ID = "-5126230189";
 
-    const message = `
-📝 *Новая заявка с формы у карты!*
-👤 *Имя:* ${name || "Не указано"}
-📱 *Телефон:* ${phone}
-💬 *Комментарий:* ${comment || "Без комментария"}
-📎 *Фото:* ${photo ? `Прикреплено (${photo.name})` : "Нет"}
-    `.trim();
+    // parse_mode HTML — не ломается от спецсимволов в пользовательском вводе
+    const message = [
+      "📝 <b>Новая заявка с формы у карты!</b>",
+      `👤 <b>Имя:</b> ${escHtml(name || "Не указано")}`,
+      `📱 <b>Телефон:</b> ${escHtml(phone)}`,
+      `💬 <b>Комментарий:</b> ${escHtml(comment || "Без комментария")}`,
+      `📎 <b>Фото:</b> ${photo ? `Прикреплено (${escHtml(photo.name)})` : "Нет"}`,
+    ].join("\n");
 
     try {
       // 1. Отправляем текстовые данные в ТГ
-      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           chat_id: CHAT_ID,
           text: message,
-          parse_mode: "Markdown",
+          parse_mode: "HTML",
         }),
       });
+      if (!res.ok) console.error("TG sendMessage error:", await res.text());
 
       // 2. Если есть фото — отправляем вторым запросом
       if (photo) {
