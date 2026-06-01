@@ -2,7 +2,7 @@ import React from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom"; // Добавили хук для перехода
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, ChevronLeft, Send } from "lucide-react";
+import { ChevronLeft, Send } from "lucide-react";
 
 const questions = [
   {

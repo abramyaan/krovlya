@@ -88,7 +88,7 @@ const PricesSection = () => {
           initial={{ opacity: 0, y: 15 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-30px" }}
-          className="max-w-5xl mx-auto bg-card rounded-2xl overflow-hidden card-hover mb-16 will-change-transform"
+          className="max-w-5xl mx-auto bg-card rounded-2xl overflow-hidden card-hover mb-16"
         >
           <div className="overflow-x-auto [WebkitOverflowScrolling:touch]">
             <table className="w-full text-left border-collapse min-w-[700px]">

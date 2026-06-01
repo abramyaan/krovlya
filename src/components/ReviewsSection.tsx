@@ -3,8 +3,6 @@ import { Star } from "lucide-react";
 import rev1 from "@/assets/review-1.jpg";
 import rev2 from "@/assets/review-2.jpg";
 import rev3 from "@/assets/review-3.jpg";
-import rev4 from "@/assets/review-4.jpg"; // Добавили аватарку 4
-import rev5 from "@/assets/review-5.jpg"; // Добавили аватарку 5
 
 const reviews = [
   {
@@ -66,7 +64,7 @@ const ReviewsSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-30px" }}
               transition={{ delay: i * 0.1 }}
-              className="bg-card rounded-2xl p-6 card-hover will-change-transform"
+              className="bg-card rounded-2xl p-6 card-hover"
             >
               <div className="flex items-center gap-4 mb-4">
                 <img
