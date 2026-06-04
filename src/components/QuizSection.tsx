@@ -23,7 +23,7 @@ const QuizSection = () => {
   const navigate = useNavigate(); // Инициализируем навигацию для редиректа
   const [step, setStep] = useState(1);
   const [answers, setAnswers] = useState<string[]>([]);
-  const [phone, setPhone] = useState("+7 ");
+  const [phone, setPhone] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -31,30 +31,28 @@ const QuizSection = () => {
     const newAnswers = [...answers];
     newAnswers[step - 1] = option;
     setAnswers(newAnswers);
+    setTimeout(() => setStep(step + 1), 300);
+  };
 
-    setTimeout(() => {
-      setStep(step + 1);
-    }, 300);
+  const formatPhone = (digits: string): string => {
+    let r = "+7 ";
+    if (digits.length > 0) r += "(" + digits.slice(0, 3);
+    if (digits.length >= 3) r += ") ";
+    if (digits.length > 3) r += digits.slice(3, 6);
+    if (digits.length >= 6) r += "-";
+    if (digits.length > 6) r += digits.slice(6, 8);
+    if (digits.length >= 8) r += "-";
+    if (digits.length > 8) r += digits.slice(8, 10);
+    return r;
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPhoneError("");
     const val = e.target.value;
-    const digitsOnly = val.replace(/\D/g, "");
-    if (digitsOnly.length >= 10) {
-      setPhone("+7 " + digitsOnly.slice(-10));
-      return;
-    }
-    if (!val.startsWith("+7 ")) { setPhone("+7 "); return; }
-    const digits = val.slice(3).replace(/\D/g, "");
-    if (digits.length <= 10) {
-      let f = "+7 ";
-      if (digits.length > 0) f += digits.slice(0, 3);
-      if (digits.length > 3) f += " " + digits.slice(3, 6);
-      if (digits.length > 6) f += "-" + digits.slice(6, 8);
-      if (digits.length > 8) f += "-" + digits.slice(8, 10);
-      setPhone(f);
-    }
+    const allDigits = val.replace(/\D/g, "");
+    const digits = allDigits.startsWith("7") ? allDigits.slice(1) :
+                   allDigits.startsWith("8") ? allDigits.slice(1) : allDigits;
+    setPhone(formatPhone(digits.slice(0, 10)));
   };
 
   const escHtml = (str: string) =>

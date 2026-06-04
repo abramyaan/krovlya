@@ -4,26 +4,34 @@ import { X, Send, Loader2 } from "lucide-react";
 
 const CallbackModal = () => {
   const navigate = useNavigate();
-  const [phone, setPhone] = useState("+7 ");
+  const [phone, setPhone] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const close = () => {
     document.getElementById("callback-modal")?.classList.add("hidden");
-    setTimeout(() => { setPhone("+7 "); setPhoneError(""); }, 300);
+    setTimeout(() => { setPhone(""); setPhoneError(""); }, 300);
+  };
+
+  const formatPhone = (digits: string): string => {
+    let r = "+7 ";
+    if (digits.length > 0) r += "(" + digits.slice(0, 3);
+    if (digits.length >= 3) r += ") ";
+    if (digits.length > 3) r += digits.slice(3, 6);
+    if (digits.length >= 6) r += "-";
+    if (digits.length > 6) r += digits.slice(6, 8);
+    if (digits.length >= 8) r += "-";
+    if (digits.length > 8) r += digits.slice(8, 10);
+    return r;
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPhoneError("");
     const val = e.target.value;
-    const digitsOnly = val.replace(/\D/g, "");
-    if (digitsOnly.length >= 10) {
-      setPhone("+7 " + digitsOnly.slice(-10));
-      return;
-    }
-    if (!val.startsWith("+7 ")) { setPhone("+7 "); return; }
-    const clean = val.slice(3).replace(/[^\d]/g, "");
-    if (clean.length <= 10) setPhone("+7 " + clean);
+    const allDigits = val.replace(/\D/g, "");
+    const digits = allDigits.startsWith("7") ? allDigits.slice(1) :
+                   allDigits.startsWith("8") ? allDigits.slice(1) : allDigits;
+    setPhone(formatPhone(digits.slice(0, 10)));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -6,7 +6,7 @@ import { MapPin, Phone, Mail, Send, User, MessageSquare, Camera, X, Loader2 } fr
 const MapSection = () => {
   const navigate = useNavigate();
   const [name, setName] = useState("");
-  const [phone, setPhone] = useState("+7 ");
+  const [phone, setPhone] = useState("");
   const [comment, setComment] = useState("");
   const [photo, setPhoto] = useState<File | null>(null);
   const [phoneError, setPhoneError] = useState("");
@@ -19,22 +19,30 @@ const MapSection = () => {
     setName(cleanName);
   };
 
-  // 2. Шаблон для Телефона: держит префикс +7, обрабатывает автозаполнение браузера
+  // Форматирует телефон в маску +7 (XXX) XXX-XX-XX
+  const formatPhone = (digits: string): string => {
+    // digits — только цифры без 7 в начале, максимум 10
+    let r = "+7 ";
+    if (digits.length > 0) r += "(" + digits.slice(0, 3);
+    if (digits.length >= 3) r += ") ";
+    if (digits.length > 3) r += digits.slice(3, 6);
+    if (digits.length >= 6) r += "-";
+    if (digits.length > 6) r += digits.slice(6, 8);
+    if (digits.length >= 8) r += "-";
+    if (digits.length > 8) r += digits.slice(8, 10);
+    return r;
+  };
+
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPhoneError("");
     const val = e.target.value;
-    // Автозаполнение вставляет полный номер (8916..., +79161234567) — нормализуем
-    const digitsOnly = val.replace(/\D/g, "");
-    if (digitsOnly.length >= 10) {
-      setPhone("+7 " + digitsOnly.slice(-10));
-      return;
-    }
-    if (!val.startsWith("+7 ")) {
-      setPhone("+7 ");
-      return;
-    }
-    const cleanNumbers = val.slice(3).replace(/[^\d]/g, "");
-    if (cleanNumbers.length <= 10) setPhone("+7 " + cleanNumbers);
+    // Вытаскиваем только цифры
+    const allDigits = val.replace(/\D/g, "");
+    // Убираем ведущую 7 или 8 если есть
+    const digits = allDigits.startsWith("7") ? allDigits.slice(1) : 
+                   allDigits.startsWith("8") ? allDigits.slice(1) : allDigits;
+    const tenDigits = digits.slice(0, 10);
+    setPhone(formatPhone(tenDigits));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -105,7 +113,7 @@ const MapSection = () => {
       }
 
       // Сбрасываем форму и переходим на страницу благодарности
-      setName(""); setPhone("+7 "); setComment(""); setPhoto(null);
+      setName(""); setPhone(""); setComment(""); setPhoto(null);
       setIsLoading(false);
       navigate("/thank-you");
 
@@ -114,7 +122,7 @@ const MapSection = () => {
       if (typeof window !== "undefined" && (window as any).ym) {
         (window as any).ym(109268456, "reachGoal", "form_submit");
       }
-      setName(""); setPhone("+7 "); setComment(""); setPhoto(null);
+      setName(""); setPhone(""); setComment(""); setPhoto(null);
       setIsLoading(false);
       navigate("/thank-you");
     }
