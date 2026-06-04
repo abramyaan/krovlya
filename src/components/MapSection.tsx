@@ -19,30 +19,14 @@ const MapSection = () => {
     setName(cleanName);
   };
 
-  // Форматирует цифры в маску +7 (XXX) XXX-XX-XX
-  const formatPhone = (digits: string): string => {
-    if (!digits) return "";
-    let r = "+7 (";
-    r += digits.slice(0, 3);
-    if (digits.length >= 3) r += ") ";
-    if (digits.length > 3) r += digits.slice(3, 6);
-    if (digits.length >= 6) r += "-";
-    if (digits.length > 6) r += digits.slice(6, 8);
-    if (digits.length >= 8) r += "-";
-    if (digits.length > 8) r += digits.slice(8, 10);
-    return r;
-  };
-
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPhoneError("");
     const val = e.target.value;
-    // Вытаскиваем все цифры из поля
     const allDigits = val.replace(/\D/g, "");
-    // Убираем ведущую 7 или 8 (автозаполнение)
     const digits = allDigits.startsWith("7") ? allDigits.slice(1) :
                    allDigits.startsWith("8") ? allDigits.slice(1) : allDigits;
-    // Максимум 10 цифр, форматируем
-    setPhone(formatPhone(digits.slice(0, 10)));
+    const ten = digits.slice(0, 10);
+    setPhone(ten ? "+7 " + ten : "");
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
