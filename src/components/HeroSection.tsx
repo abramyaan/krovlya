@@ -70,7 +70,7 @@ const HeroSection = () => {
             >
               <a
                 href="#map"
-                onClick={(e) => { e.preventDefault(); document.getElementById("map")?.scrollIntoView({ behavior: "smooth" }); }}
+                onClick={(e) => { e.preventDefault(); const el = document.getElementById("map"); if(el){ el.style.contentVisibility="visible"; setTimeout(() => { const top = el.getBoundingClientRect().top + window.scrollY - 100; window.scrollTo({ top, behavior: "smooth" }); }, 50); }; }}
                 className="btn-primary inline-flex items-center justify-center gap-3 text-lg py-4 px-8 md:px-12 rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
               >
                 Оставить заявку

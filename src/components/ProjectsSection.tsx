@@ -96,7 +96,7 @@ const ProjectsSection = () => {
                 <p className="text-muted-foreground mb-6 text-sm leading-relaxed">{p.desc}</p>
                 
                 {/* Кнопка ведет точно на форму лидогенерации */}
-                <a href="#map" onClick={(e) => { e.preventDefault(); document.getElementById("map")?.scrollIntoView({ behavior: "smooth" }); }} className="btn-primary inline-block text-base px-6 py-3 transition-all active:scale-[0.98]">
+                <a href="#map" onClick={(e) => { e.preventDefault(); const el = document.getElementById("map"); if(el){ el.style.contentVisibility="visible"; setTimeout(() => { const top = el.getBoundingClientRect().top + window.scrollY - 100; window.scrollTo({ top, behavior: "smooth" }); }, 50); }; }} className="btn-primary inline-block text-base px-6 py-3 transition-all active:scale-[0.98]">
                   Хочу так же
                 </a>
               </div>

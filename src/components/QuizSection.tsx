@@ -35,8 +35,9 @@ const QuizSection = () => {
   };
 
   const formatPhone = (digits: string): string => {
-    let r = "+7 ";
-    if (digits.length > 0) r += "(" + digits.slice(0, 3);
+    if (!digits) return "";
+    let r = "+7 (";
+    r += digits.slice(0, 3);
     if (digits.length >= 3) r += ") ";
     if (digits.length > 3) r += digits.slice(3, 6);
     if (digits.length >= 6) r += "-";

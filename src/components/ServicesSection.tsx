@@ -54,7 +54,7 @@ const ServicesSection = () => {
               <div className="p-6">
                 <h3 className="font-heading font-bold text-xl text-foreground mb-2">{s.title}</h3>
                 <p className="text-muted-foreground text-sm mb-4">{s.desc}</p>
-                <a href="#map" onClick={(e) => { e.preventDefault(); document.getElementById("map")?.scrollIntoView({ behavior: "smooth" }); }} className="btn-primary inline-block text-sm !py-2.5 !px-5">
+                <a href="#map" onClick={(e) => { e.preventDefault(); const el = document.getElementById("map"); if(el){ el.style.contentVisibility="visible"; setTimeout(() => { const top = el.getBoundingClientRect().top + window.scrollY - 100; window.scrollTo({ top, behavior: "smooth" }); }, 50); }; }} className="btn-primary inline-block text-sm !py-2.5 !px-5">
                   Оставить заявку
                 </a>
               </div>
