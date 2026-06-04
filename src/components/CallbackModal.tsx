@@ -1,45 +1,41 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom"; // Импортируем хук для навигации
-import { X, Send } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { X, Send, Loader2 } from "lucide-react";
 
 const CallbackModal = () => {
-  const navigate = useNavigate(); // Инициализируем навигацию
-  const [phone, setPhone] = useState("+7 "); // Префикс по умолчанию
+  const navigate = useNavigate();
+  const [phone, setPhone] = useState("+7 ");
+  const [phoneError, setPhoneError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const close = () => {
     document.getElementById("callback-modal")?.classList.add("hidden");
-    // Сбрасываем форму через небольшую задержку после закрытия, чтобы не дергался UI
-    setTimeout(() => {
-      setPhone("+7 ");
-    }, 300);
+    setTimeout(() => { setPhone("+7 "); setPhoneError(""); }, 300);
   };
 
-  // Шаблон для Телефона: держит префикс +7 и пускает только цифры
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPhoneError("");
     const val = e.target.value;
-
-    if (!val.startsWith("+7 ")) {
-      setPhone("+7 ");
+    const digitsOnly = val.replace(/\D/g, "");
+    if (digitsOnly.length >= 10) {
+      setPhone("+7 " + digitsOnly.slice(-10));
       return;
     }
-
-    const inputNumbers = val.slice(3);
-    const cleanNumbers = inputNumbers.replace(/[^\d]/g, "");
-
-    if (cleanNumbers.length <= 10) {
-      setPhone("+7 " + cleanNumbers);
-    }
+    if (!val.startsWith("+7 ")) { setPhone("+7 "); return; }
+    const clean = val.slice(3).replace(/[^\d]/g, "");
+    if (clean.length <= 10) setPhone("+7 " + clean);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Очищаем от пробелов для проверки чистых цифр (должно быть 11 цифр: 7 + 10 цифр номера)
-    const cleanPhone = phone.replace(/\s/g, "");
-    if (cleanPhone.length < 12) {
-      alert("Пожалуйста, введите корректный номер телефона");
+    const cleanPhone = phone.replace(/\D/g, "");
+    if (cleanPhone.length < 11) {
+      setPhoneError("Введите полный номер телефона");
       return;
     }
+
+    setIsLoading(true);
 
     const BOT_TOKEN = "8620797217:AAEPQof7Tsrps1CgCBWUwT-s11_MR1D3FLE";
     const CHAT_ID = "-5126230189";
@@ -68,14 +64,16 @@ const CallbackModal = () => {
       if (typeof window !== "undefined" && (window as any).ym) {
         (window as any).ym(109268456, "reachGoal", "form_submit");
       }
-      navigate("/thank-you"); // Переход на страницу спасибо
+      setIsLoading(false);
+      navigate("/thank-you");
     } catch (error) {
       console.error("Ошибка отправки формы:", error);
       close();
       if (typeof window !== "undefined" && (window as any).ym) {
         (window as any).ym(109268456, "reachGoal", "form_submit");
       }
-      navigate("/thank-you"); // Редиректим в любом случае, чтобы директ зафиксировал клик
+      setIsLoading(false);
+      navigate("/thank-you");
     }
   };
 
@@ -103,10 +101,21 @@ const CallbackModal = () => {
             required
             value={phone}
             onChange={handlePhoneChange}
-            className="w-full p-4 rounded-xl border-2 border-border bg-background text-foreground focus:border-primary focus:outline-none transition-colors text-lg mb-4 font-mono text-center"
+            autoComplete="tel"
+            className={`w-full p-4 rounded-xl border-2 bg-background text-foreground focus:outline-none transition-colors text-lg mb-1 font-mono text-center ${
+              phoneError ? "border-destructive" : "border-border focus:border-primary"
+            }`}
           />
-          <button type="submit" className="btn-primary w-full flex items-center justify-center gap-2 text-lg py-4">
-            <Send className="w-5 h-5" /> Перезвоните мне
+          {phoneError && <p className="text-destructive text-sm mb-3 text-center">{phoneError}</p>}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="btn-primary w-full flex items-center justify-center gap-2 text-lg py-4 mt-2 disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            {isLoading
+              ? <><Loader2 className="w-5 h-5 animate-spin" /> Отправляем...</>
+              : <><Send className="w-5 h-5" /> Перезвоните мне</>
+            }
           </button>
         </form>
       </div>

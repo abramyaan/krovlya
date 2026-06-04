@@ -156,7 +156,7 @@ const PricesSection = () => {
         <div className="text-center">
           <p className="text-muted-foreground mb-4">Окончательная смена формируется инженером после бесплатного замера</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="#map" className="btn-primary text-lg px-8 py-4 rounded-xl shadow-md transition-transform active:scale-95">
+            <a href="#map" onClick={(e) => { e.preventDefault(); document.getElementById("map")?.scrollIntoView({ behavior: "smooth" }); }} className="btn-primary text-lg px-8 py-4 rounded-xl shadow-md transition-transform active:scale-95">
               Оставить заявку
             </a>
             <a href="tel:+79999047771" className="btn-outline-primary text-lg px-8 py-4 rounded-xl transition-transform active:scale-95">

@@ -1,8 +1,8 @@
 import React from "react";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom"; // Добавили хук для перехода
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, Send } from "lucide-react";
+import { ChevronLeft, Send, Loader2 } from "lucide-react";
 
 const questions = [
   {
@@ -23,7 +23,9 @@ const QuizSection = () => {
   const navigate = useNavigate(); // Инициализируем навигацию для редиректа
   const [step, setStep] = useState(1);
   const [answers, setAnswers] = useState<string[]>([]);
-  const [phone, setPhone] = useState("+7 "); // Префикс по умолчанию как в MapSection
+  const [phone, setPhone] = useState("+7 ");
+  const [phoneError, setPhoneError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleOptionSelect = (option: string) => {
     const newAnswers = [...answers];
@@ -36,19 +38,22 @@ const QuizSection = () => {
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPhoneError("");
     const val = e.target.value;
-    if (!val.startsWith("+7 ")) {
-      setPhone("+7 ");
+    const digitsOnly = val.replace(/\D/g, "");
+    if (digitsOnly.length >= 10) {
+      setPhone("+7 " + digitsOnly.slice(-10));
       return;
     }
+    if (!val.startsWith("+7 ")) { setPhone("+7 "); return; }
     const digits = val.slice(3).replace(/\D/g, "");
     if (digits.length <= 10) {
-      let formatted = "+7 ";
-      if (digits.length > 0) formatted += digits.slice(0, 3);
-      if (digits.length > 3) formatted += " " + digits.slice(3, 6);
-      if (digits.length > 6) formatted += "-" + digits.slice(6, 8);
-      if (digits.length > 8) formatted += "-" + digits.slice(8, 10);
-      setPhone(formatted);
+      let f = "+7 ";
+      if (digits.length > 0) f += digits.slice(0, 3);
+      if (digits.length > 3) f += " " + digits.slice(3, 6);
+      if (digits.length > 6) f += "-" + digits.slice(6, 8);
+      if (digits.length > 8) f += "-" + digits.slice(8, 10);
+      setPhone(f);
     }
   };
 
@@ -58,11 +63,13 @@ const QuizSection = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const cleanPhone = phone.replace(/[^0-9+]/g, "");
-    if (cleanPhone.length < 12) {
-      alert("Пожалуйста, введите корректный номер телефона");
+    const cleanPhone = phone.replace(/\D/g, "");
+    if (cleanPhone.length < 11) {
+      setPhoneError("Введите полный номер телефона");
       return;
     }
+
+    setIsLoading(true);
 
     const BOT_TOKEN = "8620797217:AAEPQof7Tsrps1CgCBWUwT-s11_MR1D3FLE";
     const CHAT_ID = "-5126230189";
@@ -92,12 +99,14 @@ const QuizSection = () => {
       if (typeof window !== "undefined" && (window as any).ym) {
         (window as any).ym(109268456, "reachGoal", "form_submit");
       }
+      setIsLoading(false);
       navigate("/thank-you");
     } catch (error) {
       console.error("Ошибка квиза:", error);
       if (typeof window !== "undefined" && (window as any).ym) {
         (window as any).ym(109268456, "reachGoal", "form_submit");
       }
+      setIsLoading(false);
       navigate("/thank-you");
     }
   };
@@ -163,15 +172,25 @@ const QuizSection = () => {
                 {/* Обернули в форму, чтобы кнопка и Enter работали как надо */}
                 <form onSubmit={handleSubmit} className="max-w-md mx-auto w-full">
                   <input
-                    type="text"
+                    type="tel"
                     required
                     value={phone}
                     onChange={handlePhoneChange}
-                    className="w-full p-4 rounded-xl border-2 border-border bg-background text-foreground focus:border-primary focus:outline-none transition-colors text-xl mb-4 font-mono text-center"
+                    autoComplete="tel"
+                    className={`w-full p-4 rounded-xl border-2 bg-background text-foreground focus:outline-none transition-colors text-xl mb-1 font-mono text-center ${
+                      phoneError ? "border-destructive" : "border-border focus:border-primary"
+                    }`}
                   />
-                  <button type="submit" className="btn-primary w-full flex items-center justify-center gap-2 text-lg py-4">
-                    <Send className="w-5 h-5" />
-                    Получить расчёт
+                  {phoneError && <p className="text-destructive text-sm mb-3 text-center">{phoneError}</p>}
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="btn-primary w-full flex items-center justify-center gap-2 text-lg py-4 mt-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {isLoading
+                      ? <><Loader2 className="w-5 h-5 animate-spin" /> Отправляем...</>
+                      : <><Send className="w-5 h-5" /> Получить расчёт</>
+                    }
                   </button>
                 </form>
               </motion.div>

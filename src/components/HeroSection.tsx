@@ -70,6 +70,7 @@ const HeroSection = () => {
             >
               <a
                 href="#map"
+                onClick={(e) => { e.preventDefault(); document.getElementById("map")?.scrollIntoView({ behavior: "smooth" }); }}
                 className="btn-primary inline-flex items-center justify-center gap-3 text-lg py-4 px-8 md:px-12 rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
               >
                 Оставить заявку

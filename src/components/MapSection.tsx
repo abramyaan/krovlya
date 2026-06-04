@@ -1,14 +1,16 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom"; // Импортируем хук для навигации
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MapPin, Phone, Mail, Send, User, MessageSquare, Camera, X } from "lucide-react";
+import { MapPin, Phone, Mail, Send, User, MessageSquare, Camera, X, Loader2 } from "lucide-react";
 
 const MapSection = () => {
-  const navigate = useNavigate(); // Инициализируем навигацию
+  const navigate = useNavigate();
   const [name, setName] = useState("");
-  const [phone, setPhone] = useState("+7 "); // Изначально задаем жесткий префикс
+  const [phone, setPhone] = useState("+7 ");
   const [comment, setComment] = useState("");
-  const [photo, setPhoto] = useState<File | null>(null); // Стейт для хранения загруженного файла
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [phoneError, setPhoneError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   // 1. Фильтр для Имени: пропускает только буквы и пробелы
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -17,21 +19,22 @@ const MapSection = () => {
     setName(cleanName);
   };
 
-  // 2. Шаблон для Телефона: держит префикс +7 и пускает только цифры
+  // 2. Шаблон для Телефона: держит префикс +7, обрабатывает автозаполнение браузера
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPhoneError("");
     const val = e.target.value;
-
+    // Автозаполнение вставляет полный номер (8916..., +79161234567) — нормализуем
+    const digitsOnly = val.replace(/\D/g, "");
+    if (digitsOnly.length >= 10) {
+      setPhone("+7 " + digitsOnly.slice(-10));
+      return;
+    }
     if (!val.startsWith("+7 ")) {
       setPhone("+7 ");
       return;
     }
-
-    const inputNumbers = val.slice(3);
-    const cleanNumbers = inputNumbers.replace(/[^\d]/g, "");
-
-    if (cleanNumbers.length <= 10) {
-      setPhone("+7 " + cleanNumbers);
-    }
+    const cleanNumbers = val.slice(3).replace(/[^\d]/g, "");
+    if (cleanNumbers.length <= 10) setPhone("+7 " + cleanNumbers);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,11 +54,13 @@ const MapSection = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const cleanPhone = phone.replace(/\s/g, "");
-    if (cleanPhone.length < 12) {
-      alert("Пожалуйста, введите корректный номер телефона");
+    const cleanPhone = phone.replace(/\D/g, "");
+    if (cleanPhone.length < 11) {
+      setPhoneError("Введите полный номер телефона");
       return;
     }
+
+    setIsLoading(true);
 
     const BOT_TOKEN = "8620797217:AAEPQof7Tsrps1CgCBWUwT-s11_MR1D3FLE";
     const CHAT_ID = "-5126230189";
@@ -101,6 +106,7 @@ const MapSection = () => {
 
       // Сбрасываем форму и переходим на страницу благодарности
       setName(""); setPhone("+7 "); setComment(""); setPhoto(null);
+      setIsLoading(false);
       navigate("/thank-you");
 
     } catch (error) {
@@ -109,6 +115,7 @@ const MapSection = () => {
         (window as any).ym(109268456, "reachGoal", "form_submit");
       }
       setName(""); setPhone("+7 "); setComment(""); setPhoto(null);
+      setIsLoading(false);
       navigate("/thank-you");
     }
   };
@@ -141,16 +148,22 @@ const MapSection = () => {
                 />
               </div>
 
-              <div className="relative">
-                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <input
-                  type="tel"
-                  required
-                  placeholder="+7 (___) ___-__-__"
-                  value={phone}
-                  onChange={handlePhoneChange}
-                  className="w-full pl-12 pr-4 py-3.5 bg-background border-2 border-border rounded-xl text-foreground focus:border-primary focus:outline-none transition-colors font-mono"
-                />
+              <div>
+                <div className="relative">
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <input
+                    type="tel"
+                    required
+                    placeholder="+7 (___) ___-__-__"
+                    value={phone}
+                    onChange={handlePhoneChange}
+                    autoComplete="tel"
+                    className={`w-full pl-12 pr-4 py-3.5 bg-background border-2 rounded-xl text-foreground focus:outline-none transition-colors font-mono ${
+                      phoneError ? "border-destructive" : "border-border focus:border-primary"
+                    }`}
+                  />
+                </div>
+                {phoneError && <p className="text-destructive text-sm mt-1 pl-1">{phoneError}</p>}
               </div>
 
               <div className="relative">
@@ -185,8 +198,15 @@ const MapSection = () => {
                 )}
               </div>
 
-              <button type="submit" className="btn-primary w-full flex items-center justify-center gap-2 py-4 text-base mt-4">
-                <Send className="w-5 h-5" /> Отправить заявку
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="btn-primary w-full flex items-center justify-center gap-2 py-4 text-base mt-4 disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {isLoading
+                  ? <><Loader2 className="w-5 h-5 animate-spin" /> Отправляем...</>
+                  : <><Send className="w-5 h-5" /> Отправить заявку</>
+                }
               </button>
             </form>
           </motion.div>
@@ -217,7 +237,7 @@ const MapSection = () => {
                   <Phone className="w-5 h-5 text-primary-foreground" />
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Telephone</p>
+                  <p className="text-xs text-muted-foreground">Телефон</p>
                   <a href="tel:+79999047771" className="font-bold text-foreground hover:text-primary transition-colors text-sm">+7 (999) 904-77-71</a>
                 </div>
               </div>

@@ -86,7 +86,7 @@ const Header = () => {
 
       {/* Main header bar */}
       <div className="container mx-auto flex items-center justify-between py-4 px-4">
-        <a href="#hero" className="font-heading font-black text-2xl tracking-tight text-foreground flex items-center gap-2">
+        <a href="#hero" onClick={(e) => { e.preventDefault(); document.getElementById("hero")?.scrollIntoView({ behavior: "smooth" }); }} className="font-heading font-black text-2xl tracking-tight text-foreground flex items-center gap-2">
           🔥 <span className="bg-gradient-to-r from-primary to-orange-600 bg-clip-text text-transparent">КРОВЛЯ</span>МСК
         </a>
 
@@ -96,6 +96,7 @@ const Header = () => {
             <a
               key={item.href}
               href={item.href}
+              onClick={(e) => { e.preventDefault(); document.getElementById(item.href.slice(1))?.scrollIntoView({ behavior: "smooth" }); }}
               className="text-muted-foreground hover:text-foreground font-medium transition-colors text-sm relative after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 hover:after:w-full after:bg-primary after:transition-all"
             >
               {item.label}
@@ -134,7 +135,7 @@ const Header = () => {
                 <a
                   key={item.href}
                   href={item.href}
-                  onClick={() => setMobileOpen(false)}
+                  onClick={() => { setMobileOpen(false); setTimeout(() => document.getElementById(item.href.slice(1))?.scrollIntoView({ behavior: "smooth" }), 100); }}
                   className="text-foreground hover:text-primary transition-colors py-2 font-medium"
                 >
                   {item.label}
