@@ -37,7 +37,8 @@ const HeroSection = () => {
             className="lg:col-span-9 will-change-transform"
           >
             <h1 className="font-heading font-extrabold text-4xl md:text-5xl lg:text-6xl text-primary-foreground leading-tight mb-6">
-              Кровельные работы
+              Кровельные работы устранение протечек
+              <h1>монтаж и ремонт</h1>
               <span className="block text-primary"> по Москве и МО</span>
               <span className="block text-2xl md:text-3xl font-bold mt-2 text-primary-foreground/80">
                 Гарантия 5 лет · Без переплат
